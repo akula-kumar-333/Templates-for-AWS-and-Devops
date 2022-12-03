@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: VPC for Myntra Project
+Resources:
+  MyntraVPC: 
+    Type: AWS::EC2::VPC
+    Properties: 
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      Tags:
+       - Key: Name
+         Value: Myntra
+
+  MyntraInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: Myntra-IGW
+
+  MyntraAttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: MyntraVPC
+      InternetGatewayId:
+        Ref: MyntraInternetGateway
+
+  MyntraPubSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: MyntraVPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: "us-east-1a"
+      MapPublicIpOnLaunch: 'true'
+      Tags:
+      - Key: Name
+        Value: Myntra-PUB-SN
+
+  MyntraPvtSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: MyntraVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: "us-east-1a"
+      MapPublicIpOnLaunch: 'false'
+      Tags:
+      - Key: Name
+        Value: Myntra-PVT-SN
+
+  MyntraPubRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:  
+        Ref: MyntraVPC
+      Tags:
+      - Key: Name
+        Value: Myntra-PUB-RT
+
+  MyntraPvtRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:  
+        Ref: MyntraVPC
+      Tags:
+      - Key: Name
+        Value: Myntra-PVT-RT
+
+  MyntraPubSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: MyntraPubSubnet
+      RouteTableId:
+        Ref: MyntraPubRouteTable
+
+  MyntraPvtSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: MyntraPvtSubnet
+      RouteTableId:
+        Ref: MyntraPvtRouteTable
+
+  MyntraIGWRoute:
+    Type: AWS::EC2::Route
+    DependsOn: MyntraAttachGateway
+    Properties:
+       RouteTableId:
+         Ref: MyntraPubRouteTable
+       DestinationCidrBlock: 0.0.0.0/0
+       GatewayId:
+         Ref: MyntraInternetGateway
