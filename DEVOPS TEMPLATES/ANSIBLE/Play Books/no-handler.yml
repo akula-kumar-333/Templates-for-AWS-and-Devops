@@ -1,0 +1,39 @@
+---
+- name: Install HTTPD On Web Servers
+  hosts: n1
+  become: yes
+  vars:
+    http_port: 80
+
+  tasks:
+
+  - name: SELinux Permissive
+    selinux:
+      policy: targeted
+      state: permissive
+
+  - name: Ensure Apache Config File Updated
+    template:
+      dest: /etc/httpd/conf/httpd.conf
+      src: httpd.j2
+
+  - name: Restart Apache
+    service:
+      name: httpd
+      state: restarted
+
+  - name: PHP File Updated
+    copy:
+      dest: /var/www/html/date.php
+      src: date.php
+
+  - name: Install PHP
+    yum:
+      name: php
+      state: installed
+
+  - name: Restart Apache
+    service:
+      name: httpd
+      state: restarted
+...
